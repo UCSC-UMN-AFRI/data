@@ -1,5 +1,5 @@
-# Data files
-data/
+# Data files on top level
+/data/
 
 # VS Code
 .vscode/
