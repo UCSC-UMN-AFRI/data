@@ -17,6 +17,8 @@ dtype = {
     "name": str,
 }
 
+path_prefix = "./data"
+
 
 def run():
     load_dotenv()
@@ -27,17 +29,18 @@ def run():
     client = CosmosClient(URL, credential=KEY)
 
     states_to_upload = [
-        "MN",
+        "DC",
     ]
-    keys_to_upload = ["id", "act_num", "year", "state", "name", "link", "search_keys"]
+    keys_to_upload = ["id", "act_num", "year", "state", "name", "link"]
 
     database = client.get_database_client(COSMOS_DB_NAME)
-    CONTAINER_NAME = "leginfo_clean"
-    container = database.get_container_client(CONTAINER_NAME)
+
+    act_container = database.get_container_client("acts")
+    search_container = database.get_container_client("search_index")
 
     # open data/classification_results.csv
     df_classification = pd.read_excel(
-        "data/data/classification_results.xlsx", dtype={"year": str}
+        path_prefix + "/classification_results.xlsx", dtype={"year": str}
     )
     df_classification.rename(
         columns={"uni_bigrams_word_counts": "search_keys"}, inplace=True
@@ -50,54 +53,82 @@ def run():
     # get all csv files in clean-data
     onlyfiles = [
         f
-        for f in listdir("data/data/clean-data")
-        if isfile(join("data/data/clean-data", f)) and f.endswith(".csv")
+        for f in listdir(path_prefix + "/clean-data")
+        if isfile(join(path_prefix + "/clean-data", f)) and f.endswith(".csv")
     ]
     for i, file in enumerate(onlyfiles):
         if file.split("_")[0] not in states_to_upload:
             continue
         print(f"Processing {file} ({i+1}/{len(onlyfiles)})")
-        df = load_csv("data/data/clean-data/" + file)
+        df = load_csv(path_prefix + "/clean-data/" + file)
         total_rows = df.shape[0]
 
         # # Create batches of operations for bulk upload
-        item_batches = {}
+        search_batches = {}
+        act_batches = {}
         # filter df_classification by state and year
         for _, row in df.iterrows():
-            batch_key = f"{row['state']}/{row['year']}"
-            if batch_key not in item_batches:
-                item_batches[batch_key] = []
-            data = row.to_dict()
+            row_data = row.to_dict()
             row["act_num"] = row["state"] + row["year"] + row["original_act_num"]
             try:
                 classification = df_classification.loc[row["act_num"]]
             except KeyError:
                 continue
+
             # Handle multiple classifications
             if isinstance(classification, pd.DataFrame):
                 # Take the first classification or combine them as needed
                 classification = classification.iloc[0]  # Takes first row
 
-            data["search_keys"] = list(
-                json.loads(classification["search_keys"].replace("'", '"')).keys()
-            )
-            if data["search_keys"] == []:
-                continue
-            data = {key: data[key] for key in keys_to_upload}
-            data["year"] = int(data["year"])
-            item_batches[batch_key].append(("create", (data,), {}))
+            search_keys = json.loads(classification["search_keys"].replace("'", '"'))
 
-        # # Execute batch operations in chunks of 100 (Azure Cosmos DB limit)
+            if search_keys == {}:
+                continue
+
+            for search_key, relevance in search_keys.items():
+                search_data = {
+                    "id": str(uuid.uuid4()),
+                    "act_num": row["act_num"],
+                    "relevance": relevance,
+                    "state": row["state"],
+                    "year": int(row["year"]),
+                    "search_key": search_key,
+                }
+
+                batch_key = f"{row['state']}/{row['year']}/{search_key}"
+                if batch_key not in search_batches:
+                    search_batches[batch_key] = []
+                search_batches[batch_key].append(("create", (search_data,), {}))
+
+            row_data["year"] = int(row_data["year"])
+            row_data = {key: row_data[key] for key in keys_to_upload}
+            if row["act_num"] not in act_batches:
+                act_batches[row["act_num"]] = []
+            act_batches[row["act_num"]].append(row_data)
+
+        # Execute batch operations in chunks of 100 (Azure Cosmos DB limit)
         batch_size = 100
         start_time = time.time()
-        print(f"Uploading {total_rows} rows to Cosmos DB ({len(item_batches)} batches)")
-        for key, value in alive_it(item_batches.items()):
+        print(f"Uploading search index to Cosmos DB ({len(search_batches)} batches)")
+        for key, value in alive_it(search_batches.items()):
+            num_items = len(value)
+            state, year, search_key = key.split("/")
+            for i in range(0, num_items, batch_size):
+                batch = value[i : i + batch_size]
+                # Use the correct tuple format for hierarchical partition keys
+                partition_key = (state, int(year), search_key)
+                search_container.execute_item_batch(
+                    batch,
+                    partition_key=partition_key,
+                )
+
+        print(f"Uploading act data to Cosmos DB ({len(act_batches)} batches)")
+        for key, value in alive_it(act_batches.items()):
             num_items = len(value)
             for i in range(0, num_items, batch_size):
                 batch = value[i : i + batch_size]
-                container.execute_item_batch(
-                    batch, partition_key=(key.split("/")[0], int(key.split("/")[1]))
-                )
+                for item in batch:
+                    act_container.create_item(item)
 
     end_time = time.time()
     print(
