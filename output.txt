@@ -1,0 +1,858 @@
+Loading classification results, this may take a while...
+--------------------------------
+Processing MO_leginfo_clean.csv (1/51)
+Loading data from file...
+|█████████████████████████████████████▌⚠︎ | (!) 15/16 [94%] in 1.4s (10.67/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 1091
+Act numbers missing           :    66/1091 (6.05%)
+Act numbers duplicate         :     4/1091 (0.37%)
+Links missing                 :  1090/1091 (99.91%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:    67/1091 (6.14%)
+Act number multiple classifications with different data:     2/1091 (0.18%)
+Search keys are empty         :   613/1091 (56.19%)
+--------------------------------------------------
+
+
+Processing HI_leginfo_clean.csv (2/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 14.4s (3.26/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 13123
+WARNING: Name column is missing
+Act numbers duplicate         :  1490/13123 (11.35%)
+Links missing                 : 13123/13123 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:   657/13123 (5.01%)
+Search keys are empty         : 10230/13123 (77.95%)
+--------------------------------------------------
+
+
+Processing RI_leginfo_clean.csv (3/51)
+Loading data from file...
+|████████████████████████████████████████| 22/22 [100%] in 1:12.0 (0.31/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 34086
+WARNING: Name column is missing
+Act numbers duplicate         : 34086/34086 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:  2470/34086 (7.25%)
+Search keys are empty         : 28138/34086 (82.55%)
+--------------------------------------------------
+
+
+Processing SC_leginfo_clean.csv (4/51)
+Loading data from file...
+|████████████████████████████████████████| 29/29 [100%] in 8.2s (3.55/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 9573
+WARNING: Name column is missing
+Act numbers duplicate         :   519/9573 (5.42%)
+Links missing                 :  9573/9573 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:  9573/9573 (100.00%)
+--------------------------------------------------
+
+
+Processing FL_leginfo_clean.csv (5/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 19.2s (2.44/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 16172
+Act numbers duplicate         :   262/16172 (1.62%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:    28/16172 (0.17%)
+Act number multiple classifications with different data:    72/16172 (0.45%)
+Search keys are empty         : 13023/16172 (80.53%)
+--------------------------------------------------
+
+
+Processing IN_leginfo_clean.csv (6/51)
+Loading data from file...
+|████████████████████████████████████████| 24/24 [100%] in 4.6s (5.17/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 4869
+WARNING: Name column is missing
+Act numbers duplicate         :  2564/4869 (52.66%)
+Links missing                 :  4869/4869 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:  1510/4869 (31.01%)
+Search keys are empty         :  2905/4869 (59.66%)
+--------------------------------------------------
+
+
+Processing NM_leginfo_clean.csv (7/51)
+Loading data from file...
+|████████████████████████████████████████| 26/26 [100%] in 3.9s (6.61/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 4817
+Act numbers duplicate         :    73/4817 (1.52%)
+Links missing                 :  4817/4817 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    29/4817 (0.60%)
+Search keys are empty         :  3850/4817 (79.93%)
+--------------------------------------------------
+
+
+Processing NE_leginfo_clean.csv (8/51)
+Loading data from file...
+|████████████████████████████████████████| 23/23 [100%] in 3.1s (7.45/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 3710
+Links missing                 :  3710/3710 (100.00%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  2463/3710 (66.39%)
+--------------------------------------------------
+
+
+Processing IL_leginfo_clean.csv (9/51)
+Loading data from file...
+|████████████████████████████████████████| 29/29 [100%] in 13.2s (2.19/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 13521
+No issues found
+
+Classification Check Results:
+==================================================
+Act number classifications missing: 13521/13521 (100.00%)
+--------------------------------------------------
+
+
+Processing DC_leginfo_clean.csv (10/51)
+Loading data from file...
+|████████████████████████████████████████| 36/36 [100%] in 5.6s (6.42/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 6049
+Act numbers duplicate         :   240/6049 (3.97%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    22/6049 (0.36%)
+Search keys are empty         :  5576/6049 (92.18%)
+--------------------------------------------------
+
+
+Processing WV_leginfo_clean.csv (11/51)
+Loading data from file...
+|████████████████████████████████████████| 48/48 [100%] in 11.2s (4.28/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 10647
+Act numbers duplicate         :   252/10647 (2.37%)
+Links missing                 : 10647/10647 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:    30/10647 (0.28%)
+Act number multiple classifications with different data:    76/10647 (0.71%)
+Search keys are empty         :  8574/10647 (80.53%)
+--------------------------------------------------
+
+
+Processing PA_leginfo_clean.csv (12/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 9.1s (5.15/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 9024
+WARNING: Name column is missing
+Act numbers duplicate         :     2/9024 (0.02%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  6904/9024 (76.51%)
+--------------------------------------------------
+
+
+Processing UT_leginfo_clean.csv (13/51)
+Loading data from file...
+|████████████████████████████████████████| 25/25 [100%] in 11.2s (2.24/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 11931
+WARNING: Name column is missing
+Act numbers duplicate         :    74/11931 (0.62%)
+Links missing                 : 11931/11931 (100.00%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  9306/11931 (78.00%)
+--------------------------------------------------
+
+
+Processing AR_leginfo_clean.csv (14/51)
+Loading data from file...
+|████████████████████████████████████████| 18/18 [100%] in 32.5s (0.55/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 23359
+Act numbers duplicate         :  3593/23359 (15.38%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:  1319/23359 (5.65%)
+Search keys are empty         : 18910/23359 (80.95%)
+--------------------------------------------------
+
+
+Processing NJ_leginfo_clean.csv (15/51)
+Loading data from file...
+|████████████████████████████████████████| 22/22 [100%] in 4.2s (5.27/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 5522
+Act numbers duplicate         :     2/5522 (0.04%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  4401/5522 (79.70%)
+--------------------------------------------------
+
+
+Processing GA_leginfo_clean.csv (16/51)
+Loading data from file...
+|████████████████████████████████████████| 23/23 [100%] in 29.6s (0.78/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 8125
+Act numbers duplicate         :    18/8125 (0.22%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:  8125/8125 (100.00%)
+--------------------------------------------------
+
+
+Processing ID_leginfo_clean.csv (17/51)
+Loading data from file...
+|████████████████████████████████████████| 26/26 [100%] in 8.8s (2.96/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 9745
+Act numbers duplicate         :  1026/9745 (10.53%)
+Links missing                 :  9745/9745 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:    54/9745 (0.55%)
+Act number multiple classifications with different data:   868/9745 (8.91%)
+Search keys are empty         :  6701/9745 (68.76%)
+--------------------------------------------------
+
+
+Processing OR_leginfo_clean.csv (18/51)
+Loading data from file...
+|████████████████████████████████████████| 21/21 [100%] in 9.9s (2.13/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 10819
+WARNING: Name column is missing
+Act numbers duplicate         :  1602/10819 (14.81%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:   485/10819 (4.48%)
+Search keys are empty         :  7942/10819 (73.41%)
+--------------------------------------------------
+
+
+Processing MT_leginfo_clean.csv (19/51)
+Loading data from file...
+|████████████████████████████████████████| 14/14 [100%] in 4.5s (3.09/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 6659
+Act numbers duplicate         :    24/6659 (0.36%)
+Years with invalid value      :     1/6659 (0.02%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    20/6659 (0.30%)
+Search keys are empty         :  4686/6659 (70.37%)
+--------------------------------------------------
+
+
+Processing MI_leginfo_clean.csv (20/51)
+Loading data from file...
+|████████████████████████████████████████| 26/26 [100%] in 9.0s (2.90/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 10315
+No issues found
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  8058/10315 (78.12%)
+--------------------------------------------------
+
+
+Processing IA_leginfo_clean.csv (21/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 9.5s (4.93/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 9589
+Act numbers duplicate         :    44/9589 (0.46%)
+Links missing                 :   334/9589 (3.48%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    32/9589 (0.33%)
+Search keys are empty         :  6590/9589 (68.72%)
+--------------------------------------------------
+
+
+Processing CT_leginfo_clean.csv (22/51)
+Loading data from file...
+|████████████████████████████████████████| 17/17 [100%] in 3.4s (5.00/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 4407
+WARNING: Name column is missing
+Act numbers duplicate         :   737/4407 (16.72%)
+Links missing                 :  4407/4407 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    21/4407 (0.48%)
+Search keys are empty         :  3469/4407 (78.72%)
+--------------------------------------------------
+
+
+Processing SD_leginfo_clean.csv (23/51)
+Loading data from file...
+|████████████████████████████████████████| 23/23 [100%] in 4.2s (5.54/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 5389
+WARNING: Name column is missing
+Act numbers duplicate         :     2/5389 (0.04%)
+Links missing                 :  5389/5389 (100.00%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  4550/5389 (84.43%)
+--------------------------------------------------
+
+
+Processing NH_leginfo_clean.csv (24/51)
+Loading data from file...
+|████████████████████████████████████████| 32/32 [100%] in 9.3s (3.44/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 10127
+No issues found
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  8743/10127 (86.33%)
+--------------------------------------------------
+
+
+Processing OH_leginfo_clean.csv (25/51)
+Loading data from file...
+|████████████████████████████████████████| 26/26 [100%] in 2.6s (10.13/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 2473
+Act numbers badly formatted   :   794/2473 (32.11%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  1557/2473 (62.96%)
+--------------------------------------------------
+
+
+Processing DE_leginfo_clean.csv (26/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 10.8s (4.35/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 10538
+Act numbers missing           :   166/10538 (1.58%)
+Act numbers duplicate         :    40/10538 (0.38%)
+Links missing                 : 10538/10538 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:   166/10538 (1.58%)
+Act number multiple classifications with different data:     9/10538 (0.09%)
+Search keys are empty         :  9328/10538 (88.52%)
+--------------------------------------------------
+
+
+Processing CO_leginfo_clean.csv (27/51)
+Loading data from file...
+|████████████████████████████████████████| 29/29 [100%] in 10.3s (2.81/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 11401
+No issues found
+
+Classification Check Results:
+==================================================
+Act number classifications missing:  6223/11401 (54.58%)
+Search keys are empty         :  4232/11401 (37.12%)
+--------------------------------------------------
+
+
+Processing TN_leginfo_clean.csv (28/51)
+Loading data from file...
+|████████████████████████████████████████| 28/28 [100%] in 13.4s (2.08/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 12633
+WARNING: Name column is missing
+Act numbers duplicate         :   166/12633 (1.31%)
+Links missing                 : 12633/12633 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    45/12633 (0.36%)
+Search keys are empty         : 11428/12633 (90.46%)
+--------------------------------------------------
+
+
+Processing MS_leginfo_clean.csv (29/51)
+Loading data from file...
+|████████████████████████████████████████| 11/11 [100%] in 3.5s (3.12/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 5576
+Act numbers duplicate         :    50/5576 (0.90%)
+Links missing                 :  5576/5576 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    30/5576 (0.54%)
+Search keys are empty         :  4201/5576 (75.34%)
+--------------------------------------------------
+
+
+Processing WY_leginfo_clean.csv (30/51)
+Loading data from file...
+|████████████████████████████████████████| 26/26 [100%] in 6.8s (3.80/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 8108
+WARNING: Name column is missing
+Act numbers duplicate         :    77/8108 (0.95%)
+Links missing                 :  8108/8108 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    24/8108 (0.30%)
+Search keys are empty         :  7216/8108 (89.00%)
+--------------------------------------------------
+
+
+Processing MD_leginfo_clean.csv (31/51)
+Loading data from file...
+|████████████████████████████████████████| 10/10 [100%] in 5.0s (2.02/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 7341
+WARNING: Name column is missing
+Act numbers duplicate         :    51/7341 (0.69%)
+Links missing                 :  7341/7341 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    13/7341 (0.18%)
+Search keys are empty         :  5784/7341 (78.79%)
+--------------------------------------------------
+
+
+Processing KS_leginfo_clean.csv (32/51)
+Loading data from file...
+|████████████████████████████████████████| 27/27 [100%] in 3.7s (7.38/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 4238
+Act numbers badly formatted   :  4238/4238 (100.00%)
+Act numbers duplicate         :  3216/4238 (75.88%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    30/4238 (0.71%)
+Search keys are empty         :  2945/4238 (69.49%)
+--------------------------------------------------
+
+
+Processing KY_leginfo_clean.csv (33/51)
+Loading data from file...
+|████████████████████████████████████████| 25/25 [100%] in 4.3s (5.83/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 5361
+Act numbers duplicate         :    20/5361 (0.37%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    18/5361 (0.34%)
+Search keys are empty         :  3925/5361 (73.21%)
+--------------------------------------------------
+
+
+Processing ME_leginfo_clean.csv (34/51)
+Loading data from file...
+|████████████████████████████████████████| 24/24 [100%] in 18.1s (1.33/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 16406
+No issues found
+
+Classification Check Results:
+==================================================
+Search keys are empty         : 10018/16406 (61.06%)
+--------------------------------------------------
+
+
+Processing AK_leginfo_clean.csv (35/51)
+Loading data from file...
+|████████████████████████████████████████| 30/30 [100%] in 3.0s (9.89/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 2968
+Links missing                 :  2968/2968 (100.00%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         :  2420/2968 (81.54%)
+--------------------------------------------------
+
+
+Processing OK_leginfo_clean.csv (36/51)
+Loading data from file...
+|████████████████████████████████████████| 31/31 [100%] in 20.1s (1.54/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 16562
+WARNING: Name column is missing
+Act numbers duplicate         :  2164/16562 (13.07%)
+Links missing                 : 16562/16562 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:  1387/16562 (8.37%)
+Search keys are empty         : 10807/16562 (65.25%)
+--------------------------------------------------
+
+
+Processing WI_leginfo_clean.csv (37/51)
+Loading data from file...
+|████████████████████████████████████████| 31/31 [100%] in 4.0s (7.76/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 4462
+Act numbers duplicate         :    41/4462 (0.92%)
+Links missing                 :  4462/4462 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    16/4462 (0.36%)
+Search keys are empty         :  3835/4462 (85.95%)
+--------------------------------------------------
+
+
+Processing MA_leginfo_clean.csv (38/51)
+Loading data from file...
+|████████████████████████████████████████| 26/26 [100%] in 6.8s (3.80/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 8108
+WARNING: Name column is missing
+Act numbers duplicate         :    77/8108 (0.95%)
+Links missing                 :  8108/8108 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    24/8108 (0.30%)
+Search keys are empty         :  7216/8108 (89.00%)
+--------------------------------------------------
+
+
+Processing NV_leginfo_clean.csv (39/51)
+Loading data from file...
+|████████████████████████████████████████| 33/33 [100%] in 17.4s (1.90/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 15503
+Act numbers duplicate         :  1014/15503 (6.54%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:   336/15503 (2.17%)
+Search keys are empty         : 12847/15503 (82.87%)
+--------------------------------------------------
+
+
+Processing NY_leginfo_clean.csv (40/51)
+Loading data from file...
+|████████████████████████████████████████| 12/12 [100%] in 40.0s (0.30/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 27055
+No issues found
+
+Classification Check Results:
+==================================================
+Search keys are empty         : 23926/27055 (88.43%)
+--------------------------------------------------
+
+
+Processing TX_leginfo_clean.csv (41/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 51.2s (0.92/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 27845
+WARNING: Name column is missing
+Act numbers duplicate         : 11570/27845 (41.55%)
+Links missing                 : 27845/27845 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:  2982/27845 (10.71%)
+Search keys are empty         : 20864/27845 (74.93%)
+--------------------------------------------------
+
+
+Processing LA_leginfo_clean.csv (42/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 20.6s (2.28/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 17530
+Years with invalid value      :   912/17530 (5.20%)
+
+Classification Check Results:
+==================================================
+Search keys are empty         : 15322/17530 (87.40%)
+--------------------------------------------------
+
+
+Processing CA_leginfo_clean.csv (43/51)
+Loading data from file...
+|████████████████████████████████████████| 23/23 [100%] in 32.0s (0.72/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 23608
+Act numbers duplicate         :   158/23608 (0.67%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    78/23608 (0.33%)
+Search keys are empty         : 18179/23608 (77.00%)
+--------------------------------------------------
+
+
+Processing VA_leginfo_clean.csv (44/51)
+Loading data from file...
+|████████████████████████████████████████| 29/29 [100%] in 53.3s (0.54/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 26140
+Act numbers duplicate         :   500/26140 (1.91%)
+Links missing                 : 26140/26140 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:   352/26140 (1.35%)
+Search keys are empty         : 20808/26140 (79.60%)
+--------------------------------------------------
+
+
+Processing WA_leginfo_clean.csv (45/51)
+Loading data from file...
+|████████████████████████████████████████| 45/45 [100%] in 24.4s (1.84/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 17017
+Act numbers badly formatted   : 17017/17017 (100.00%)
+Act numbers duplicate         :  7256/17017 (42.64%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:     4/17017 (0.02%)
+Act number multiple classifications with different data:   237/17017 (1.39%)
+Search keys are empty         : 11769/17017 (69.16%)
+--------------------------------------------------
+
+
+Processing MN_leginfo_clean.csv (46/51)
+Loading data from file...
+|████████████████████████████████████████| 47/47 [100%] in 11.2s (4.21/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 10067
+Act numbers badly formatted   : 10067/10067 (100.00%)
+Act numbers duplicate         :  7630/10067 (75.79%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:   281/10067 (2.79%)
+Search keys are empty         :  5856/10067 (58.17%)
+--------------------------------------------------
+
+
+Processing AL_leginfo_clean.csv (47/51)
+Loading data from file...
+|████████████████████████████████████████| 25/25 [100%] in 15.0s (1.66/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 13121
+Act numbers duplicate         :  1487/13121 (11.33%)
+Links missing                 : 13121/13121 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:     1/13121 (0.01%)
+Act number multiple classifications with different data:   377/13121 (2.87%)
+Search keys are empty         : 11121/13121 (84.76%)
+--------------------------------------------------
+
+
+Processing AZ_leginfo_clean.csv (48/51)
+Loading data from file...
+|████████████████████████████████████████| 22/22 [100%] in 5.7s (3.88/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 7200
+Act numbers duplicate         :    75/7200 (1.04%)
+Links missing                 :  7200/7200 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    45/7200 (0.62%)
+Search keys are empty         :  5488/7200 (76.22%)
+--------------------------------------------------
+
+
+Processing VT_leginfo_clean.csv (49/51)
+Loading data from file...
+|████████████████████████████████████████| 14/14 [100%] in 1.4s (9.85/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 1431
+Act numbers duplicate         :     2/1431 (0.14%)
+Links missing                 :  1431/1431 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:     2/1431 (0.14%)
+Search keys are empty         :   953/1431 (66.60%)
+--------------------------------------------------
+
+
+Processing NC_leginfo_clean.csv (50/51)
+Loading data from file...
+|████████████████████████████████████████| 40/40 [100%] in 24.5s (1.63/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 19628
+Act numbers duplicate         :    52/19628 (0.26%)
+
+Classification Check Results:
+==================================================
+Act number multiple classifications with different data:    22/19628 (0.11%)
+Search keys are empty         : 16931/19628 (86.26%)
+--------------------------------------------------
+
+
+Processing ND_leginfo_clean.csv (51/51)
+Loading data from file...
+|████████████████████████████████████████| 22/22 [100%] in 6.1s (3.62/s) 
+
+CSV Check Results:
+==================================================
+Total rows processed: 7772
+Act numbers missing           :    27/7772 (0.35%)
+Act numbers duplicate         :    38/7772 (0.49%)
+Links missing                 :  7772/7772 (100.00%)
+
+Classification Check Results:
+==================================================
+Act number classifications missing:    27/7772 (0.35%)
+Act number multiple classifications with different data:    14/7772 (0.18%)
+Search keys are empty         :  6133/7772 (78.91%)
+--------------------------------------------------
+
+

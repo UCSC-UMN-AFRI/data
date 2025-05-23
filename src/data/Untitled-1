@@ -1,0 +1,193 @@
+import json
+from alive_progress import alive_it
+import pandas as pd
+from os import listdir
+from os.path import isfile, join
+
+dtype = {
+    "state": str,
+    "year": str,
+    "act_num": str,
+    "original_act_num": str,
+    "link": str,
+    "name": str,
+}
+
+
+def run():
+    # open data/classification_results.xlsx
+    print("Loading classification results, this may take a while...")
+    # Read only necessary columns to save memory
+    df_classification = pd.read_excel(
+        "data/classification_results.xlsx",
+        dtype={"year": str},
+        usecols=["act_num", "year", "state", "uni_bigrams_word_counts"],
+    )
+    df_classification.rename(
+        columns={"uni_bigrams_word_counts": "search_keys"}, inplace=True
+    )
+    df_classification.set_index(["act_num"], inplace=True)
+    print("--------------------------------")
+
+    # get all csv files in clean-data
+    onlyfiles = [
+        f
+        for f in listdir("data/clean-data")
+        if isfile(join("data/clean-data", f)) and f.endswith(".csv")
+    ]
+    for i, file in enumerate(onlyfiles):
+        classification_missing = 0
+        search_keys_missing = 0
+        search_keys_bad_format = 0
+        duplicate_classification = 0
+        nan_year_count = 0
+        link_missing = 0
+        act_num_bad_format = 0
+        act_num_missing = 0
+        print(f"Processing {file} ({i+1}/{len(onlyfiles)})")
+        df = load_csv("data/clean-data/" + file)
+        total_rows = df.shape[0]
+
+        # Group by state and year, and process each group
+        for (state, year), group_df in alive_it(
+            df.groupby(["state", "year"]), total=len(df.groupby(["state", "year"]))
+        ):
+            # filter classification by year and state
+            year_classification = df_classification[
+                (df_classification["year"] == year)
+                & (df_classification["state"] == state)
+            ]
+
+            # Process each row in the group
+            for _, row in group_df.iterrows():
+                # check links missing, check act_num well formatted
+                if not str(row["year"]).isnumeric():
+                    nan_year_count += 1
+
+                try:
+                    if row["link"] == None or row["link"] == "":
+                        link_missing += 1
+                except KeyError:
+                    link_missing += 1
+
+                # should start with state+year
+                try:
+                    if row["act_num"] == None or row["act_num"] == "":
+                        act_num_missing += 1
+                    elif not row["act_num"].startswith(row["state"] + str(row["year"])):
+                        act_num_bad_format += 1
+                except KeyError:
+                    act_num_missing += 1
+                    continue
+
+                try:
+                    classification = year_classification.loc[row["act_num"]]
+                except KeyError:
+                    classification_missing += 1
+                    continue
+
+                # Check for multiple classifications
+                if isinstance(classification, pd.DataFrame):
+                    # Take the first classification to check if data is missing
+                    classification = classification.iloc[0]
+                    duplicate_classification += 1
+
+                # Check for missing search keys
+                if (
+                    classification["search_keys"] == "{}"
+                    or classification["search_keys"] == ""
+                    or classification["search_keys"] == None
+                ):
+                    search_keys_missing += 1
+                else:
+                    try:
+                        json.loads(classification["search_keys"].replace("'", '"'))
+                    except KeyError:
+                        search_keys_bad_format += 1
+
+                del classification
+
+            del year_classification
+
+        # Print statistics with better formatting
+        print("\nCSV Check Results:")
+        print("=" * 50)
+        print(f"Total rows processed: {total_rows}")
+
+        # Check if name column is missing (fixed the logic)
+        if "name" not in df.columns:
+            print("WARNING: Name column is missing")
+
+        # Format percentages to 2 decimal places
+        stats = {
+            "Act numbers missing": act_num_missing,
+            "Act numbers badly formatted": act_num_bad_format,
+            "Years with NaN values": nan_year_count,
+            "Links missing": link_missing
+        }
+
+        for label, count in stats.items():
+            percentage = (count / total_rows) * 100
+            print(f"{label:30}: {count:5}/{total_rows} ({percentage:.2f}%)")
+
+        print("\nClassification Check Results:")
+        print("=" * 50)
+        class_stats = {
+            "Classifications missing": classification_missing,
+            "Duplicate classifications": duplicate_classification,
+            "Search keys missing": search_keys_missing,
+            "Search keys badly formatted": search_keys_bad_format
+        }
+
+        for label, count in class_stats.items():
+            percentage = (count / total_rows) * 100
+            print(f"{label:30}: {count:5}/{total_rows} ({percentage:.2f}%)")
+
+        print("\n" + "-" * 50 + "\n")
+        del df
+
+    del df_classification
+
+
+def load_csv(file_path):
+    print(f"Loading data from file...")
+    # Get available columns first
+    all_columns = pd.read_csv(file_path, nrows=0).columns
+
+    # Define column mappings
+    column_mappings = {
+        "State": "state",
+        "Year": "year",
+        "Title": "name",
+        "links": "link",
+        "Link to full text": "link",
+        "act_num": "act_num",
+        "year": "year",
+        "state": "state",
+        "name": "name",
+        "link": "link",
+    }
+
+    # Filter to only columns we care about
+    columns_to_load = [col for col in all_columns if col in column_mappings.keys() or col in column_mappings.values()]
+
+    # Load only the columns that exist
+    df = pd.read_csv(
+        file_path,
+        dtype=dtype,
+        usecols=columns_to_load
+    )
+
+    # Apply column renaming
+    for old_col, new_col in column_mappings.items():
+        if old_col in df.columns:
+            df.rename(columns={old_col: new_col}, inplace=True)
+
+    # Replace all NaN values with None for proper JSON serialization
+    df = df.where(pd.notna(df), None)
+
+    return df
+
+
+if __name__ == "__main__":
+    run()

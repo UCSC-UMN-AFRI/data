@@ -12,12 +12,12 @@ def run():
     client = CosmosClient(URL, credential=KEY)
 
     database = client.get_database_client(COSMOS_DB_NAME)
-    CONTAINER_NAME = "leginfo_clean"
+    CONTAINER_NAME = "search_index"
     container = database.get_container_client(CONTAINER_NAME)
 
     # delete all items where CONTAINS(c.act_num, "\n")
     items = container.query_items(
-        query="SELECT * FROM c WHERE CONTAINS(c.act_num, '\n')",
+        query="SELECT * FROM c",
         enable_cross_partition_query=True
     )
 
@@ -25,7 +25,7 @@ def run():
     # filter df_classification by state and year
     for i, row in enumerate(items):
         print(f"{i}")
-        container.delete_item(item=row, partition_key=(row["state"], row["year"]))
+        container.delete_item(item=row, partition_key=(row["state"], row["year"], row["search_key"]))
         # batch_key = f"{row['state']}/{row['year']}"
         # if batch_key not in item_batches:
         #     item_batches[batch_key] = []
