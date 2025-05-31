@@ -1,8 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.13.6/.schema/devbox.schema.json",
-    "packages": ["python@3.11", "python311Packages.pip"],
+    "packages": ["python@3.11", "python311Packages.pip", "uv@latest"],
     "env": {
-        "VENV_DIR": ".venv"
+        "UV_PYTHON": "$VENV_DIR/bin/python"
     },
     "shell": {
         "init_hook": [
