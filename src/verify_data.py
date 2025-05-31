@@ -23,7 +23,7 @@ def run():
     print("Loading classification results, this may take a while...")
     # Read only necessary columns to save memory
     df_classification = pd.read_csv(
-        join(script_dir, "data/classification_results.csv"),
+        join(script_dir, "../data/classification_results.csv"),
         dtype={"year": str},
         usecols=["act_num", "year", "state", "uni_bigrams_word_counts"],
     )
@@ -34,7 +34,7 @@ def run():
     print("--------------------------------")
 
     # get all csv files in clean-data
-    clean_data_dir = join(script_dir, "data/clean-data")
+    clean_data_dir = join(script_dir, "../data/clean-data")
     onlyfiles = [
         f
         for f in listdir(clean_data_dir)

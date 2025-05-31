@@ -249,7 +249,7 @@ def run():
     output_dir = join(script_dir, "missing_pdfs_output")
 
     # Get all CSV files in clean-data
-    clean_data_dir = join(script_dir, "data/clean-data")
+    clean_data_dir = join(script_dir, "../data/clean-data")
     all_files = [
         f
         for f in listdir(clean_data_dir)

@@ -6,7 +6,7 @@ from azure.cosmos import CosmosClient
 from dotenv import load_dotenv
 import pandas as pd
 from os import listdir, environ
-from os.path import isfile, join
+from os.path import isfile, join, dirname, abspath
 
 dtype = {
     "state": str,
@@ -35,9 +35,14 @@ def run():
     CONTAINER_NAME = "leginfo_clean"
     container = database.get_container_client(CONTAINER_NAME)
 
+    # Get the directory where the script is located
+    script_dir = dirname(abspath(__file__))
+
     # open data/classification_results.csv
-    df_classification = pd.read_excel(
-        "data/data/classification_results.xlsx", dtype={"year": str}
+    print("Loading classification results, this may take a while...")
+    # Read only necessary columns to save memory
+    df_classification = pd.read_csv(
+        "../data/classification_results.csv", dtype={"year": str}
     )
     df_classification.rename(
         columns={"uni_bigrams_word_counts": "search_keys"}, inplace=True
@@ -46,18 +51,19 @@ def run():
         df_classification["state"].isin(states_to_upload)
     ]
     df_classification.set_index(["act_num"], inplace=True)
+    print("--------------------------------")
 
     # get all csv files in clean-data
     onlyfiles = [
         f
-        for f in listdir("data/data/clean-data")
-        if isfile(join("data/data/clean-data", f)) and f.endswith(".csv")
+        for f in listdir("../data/clean-data")
+        if isfile(join("../data/clean-data", f)) and f.endswith(".csv")
     ]
     for i, file in enumerate(onlyfiles):
         if file.split("_")[0] not in states_to_upload:
             continue
         print(f"Processing {file} ({i+1}/{len(onlyfiles)})")
-        df = load_csv("data/data/clean-data/" + file)
+        df = load_csv("../data/clean-data/" + file)
         total_rows = df.shape[0]
 
         # # Create batches of operations for bulk upload
