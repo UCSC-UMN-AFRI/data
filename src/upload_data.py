@@ -74,7 +74,7 @@ def run():
             batch_key = f"{row['state']}/{row['year']}"
             if batch_key not in item_batches:
                 item_batches[batch_key] = []
-            data = row.to_dict()
+            # standardize act_num to match classification key format
             row["act_num"] = row["state"] + row["year"] + row["original_act_num"]
             try:
                 classification = df_classification.loc[row["act_num"]]
@@ -85,11 +85,14 @@ def run():
                 # Take the first classification or combine them as needed
                 classification = classification.iloc[0]  # Takes first row
 
-            data["search_keys"] = list(
+            search_keys_list = list(
                 json.loads(classification["search_keys"].replace("'", '"')).keys()
             )
-            if data["search_keys"] == []:
+            if search_keys_list == []:
                 continue
+            # build payload after act_num is standardized and include search_keys
+            data = row.to_dict()
+            data["search_keys"] = search_keys_list
             data = {key: data[key] for key in keys_to_upload}
             data["year"] = int(data["year"])
             item_batches[batch_key].append(("create", (data,), {}))
