@@ -26,6 +26,7 @@ def run():
     COSMOS_DB_NAME = environ["COSMOS_DB_NAME"]
     client = CosmosClient(URL, credential=KEY)
 
+    ## add all states to upload here e.g.: ["GA", "IA"]
     states_to_upload = [
         "MN",
     ]
