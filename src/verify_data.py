@@ -1,9 +1,10 @@
 import gc
 import json
-from alive_progress import alive_it
-import pandas as pd
 from os import listdir
-from os.path import isfile, join, dirname, abspath
+from os.path import abspath, dirname, isfile, join
+
+import pandas as pd
+from alive_progress import alive_it
 
 dtype = {
     "state": str,
@@ -35,11 +36,11 @@ def run():
 
     # get all csv files in clean-data
     clean_data_dir = join(script_dir, "../data/clean-data")
-    onlyfiles = [
+    onlyfiles = sorted([
         f
         for f in listdir(clean_data_dir)
         if isfile(join(clean_data_dir, f)) and f.endswith(".csv")
-    ]
+    ])
     for i, file in enumerate(onlyfiles):
         classification_missing = 0
         search_keys_missing = 0
@@ -50,7 +51,7 @@ def run():
         act_num_bad_format = 0
         act_num_missing = 0
         duplicate_act_num = 0
-        print(f"Processing {file} ({i+1}/{len(onlyfiles)})")
+        print(f"Processing {file} ({i + 1}/{len(onlyfiles)})")
         df = load_csv(join(clean_data_dir, file))
         total_rows = df.shape[0]
         df_grouped = df.groupby(["state", "year"])
@@ -80,7 +81,9 @@ def run():
                     if row["act_num"] == None or row["act_num"] == "":
                         act_num_missing += 1
                     else:
-                        if not row["act_num"].startswith(row["state"] + str(row["year"])):
+                        if not row["act_num"].startswith(
+                            row["state"] + str(row["year"])
+                        ):
                             act_num_bad_format += 1
                         # check if act_num occurs more than once in the clean data df
                         if df[df["act_num"] == row["act_num"]].shape[0] > 1:
@@ -174,7 +177,7 @@ def run():
 
 
 def load_csv(file_path):
-    print(f"Loading data from file...")
+    print("Loading data from file...")
     # Get available columns first
     all_columns = pd.read_csv(file_path, nrows=0).columns
 
@@ -183,6 +186,9 @@ def load_csv(file_path):
         "State": "state",
         "Year": "year",
         "Title": "name",
+        "title": "name",
+        "summary": "name",
+        "Summary": "name",
         "links": "link",
         "Link to full text": "link",
         "act_num": "act_num",
