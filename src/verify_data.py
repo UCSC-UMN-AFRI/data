@@ -54,76 +54,79 @@ def run():
         print(f"Processing {file} ({i + 1}/{len(onlyfiles)})")
         df = load_csv(join(clean_data_dir, file))
         total_rows = df.shape[0]
+
+        # Pre-compute duplicate act_nums for O(1) lookup instead of O(n²) scan
+        act_num_counts = df["act_num"].value_counts()
+        duplicate_act_nums = set(act_num_counts[act_num_counts > 1].index)
+
         df_grouped = df.groupby(["state", "year"])
 
-        # Group by state and year, and process each group
+        # Process each group
         for (state, year), group_df in alive_it(df_grouped, total=len(df_grouped)):
-            # filter classification by year and state
-            year_classification = df_classification[
-                (df_classification["year"] == year)
-                & (df_classification["state"] == state)
-            ]
+                # filter classification by year and state
+                year_classification = df_classification[
+                    (df_classification["year"] == year)
+                    & (df_classification["state"] == state)
+                ]
 
-            # Process each row in the group
-            for _, row in group_df.iterrows():
-                # check links missing, check act_num well formatted
-                if not str(row["year"]).isnumeric():
-                    nan_year_count += 1
+                # Process each row using itertuples() for better performance
+                for row in group_df.itertuples(index=False):
+                    # check links missing, check act_num well formatted
+                    if not str(row.year).isnumeric():
+                        nan_year_count += 1
 
-                try:
-                    if row["link"] == None or row["link"] == "":
-                        link_missing += 1
-                except KeyError:
-                    link_missing += 1
-
-                # should start with state+year
-                try:
-                    if row["act_num"] == None or row["act_num"] == "":
-                        act_num_missing += 1
-                    else:
-                        if not row["act_num"].startswith(
-                            row["state"] + str(row["year"])
-                        ):
-                            act_num_bad_format += 1
-                        # check if act_num occurs more than once in the clean data df
-                        if df[df["act_num"] == row["act_num"]].shape[0] > 1:
-                            duplicate_act_num += 1
-                except KeyError:
-                    act_num_missing += 1
-                    continue
-
-                try:
-                    classification = year_classification.loc[row["act_num"]]
-                except KeyError:
-                    classification_missing += 1
-                    continue
-
-                # Check for multiple classifications where the data is different
-                if isinstance(classification, pd.DataFrame):
-                    # Check if all rows are identical by comparing with the first row
-                    first_row = classification.iloc[0]
-                    if not (classification == first_row).all(axis=1).all():
-                        multiple_classification += 1
-                        continue
-                    classification = first_row
-
-                # Check for missing search keys
-                if (
-                    classification["search_keys"] == "{}"
-                    or classification["search_keys"] == ""
-                    or classification["search_keys"] == None
-                ):
-                    search_keys_missing += 1
-                else:
                     try:
-                        json.loads(classification["search_keys"].replace("'", '"'))
+                        if row.link is None or row.link == "":
+                            link_missing += 1
+                    except AttributeError:
+                        link_missing += 1
+
+                    # should start with state+year
+                    try:
+                        if row.act_num is None or row.act_num == "":
+                            act_num_missing += 1
+                        else:
+                            if not row.act_num.startswith(row.state + str(row.year)):
+                                act_num_bad_format += 1
+                            # check if act_num occurs more than once using pre-computed set
+                            if row.act_num in duplicate_act_nums:
+                                duplicate_act_num += 1
+                    except AttributeError:
+                        act_num_missing += 1
+                        continue
+
+                    try:
+                        classification = year_classification.loc[row.act_num]
                     except KeyError:
-                        search_keys_bad_format += 1
+                        classification_missing += 1
+                        continue
 
-                del classification
+                    # Check for multiple classifications where the data is different
+                    if isinstance(classification, pd.DataFrame):
+                        # Check if all rows are identical by comparing with the first row
+                        first_row = classification.iloc[0]
+                        if not (classification == first_row).all(axis=1).all():
+                            multiple_classification += 1
+                            continue
+                        classification = first_row
 
-            del year_classification
-            del group_df
+                    # Check for missing search keys
+                    if isinstance(classification, pd.Series):
+                        search_keys = classification.get("search_keys")
+                    else:
+                        search_keys = classification["search_keys"]
+                    if search_keys == "{}" or search_keys == "" or search_keys is None:
+                        search_keys_missing += 1
+                    else:
+                        try:
+                            json.loads(search_keys.replace("'", '"'))
+                        except (json.JSONDecodeError, TypeError):
+                            search_keys_bad_format += 1
+
+                    del classification
+
+                del year_classification
+                del group_df
 
         # Print statistics with better formatting
         print("\nCSV Check Results:")
