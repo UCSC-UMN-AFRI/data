@@ -32,7 +32,6 @@ dtype = {
     "year": str,
     "act_num": str,
     "original_act_num": str,
-    "link": str,
     "name": str,
 }
 
@@ -355,13 +354,10 @@ def load_csv(file_path):
         "State": "state",
         "Year": "year",
         "Title": "name",
-        "links": "link",
-        "Link to full text": "link",
         "act_num": "act_num",
         "year": "year",
         "state": "state",
         "name": "name",
-        "link": "link",
     }
 
     # Filter to only columns we care about (prioritize act_num)

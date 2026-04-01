@@ -13,7 +13,6 @@ dtype = {
     "year": str,
     "act_num": str,
     "original_act_num": str,
-    "link": str,
     "name": str,
 }
 
@@ -30,7 +29,7 @@ def run():
     states_to_upload = [
         "MN",
     ]
-    keys_to_upload = ["id", "act_num", "year", "state", "name", "link", "search_keys"]
+    keys_to_upload = ["id", "act_num", "year", "state", "name", "search_keys"]
 
     database = client.get_database_client(COSMOS_DB_NAME)
     CONTAINER_NAME = "leginfo_clean"
@@ -88,6 +87,7 @@ def run():
             search_keys_list = list(
                 json.loads(classification["search_keys"].replace("'", '"')).keys()
             )
+            # Empty search keys indicate non-agriculture acts; these are excluded by design
             if search_keys_list == []:
                 continue
             # build payload after act_num is standardized and include search_keys
@@ -134,12 +134,6 @@ def load_csv(file_path):
 
     if "Title" in df.columns:
         df.rename(columns={"Title": "name"}, inplace=True)
-
-    if "links" in df.columns:
-        df.rename(columns={"links": "link"}, inplace=True)
-
-    if "Link to full text" in df.columns:
-        df.rename(columns={"Link to full text": "link"}, inplace=True)
 
     # Replace all NaN values with None for proper JSON serialization
     df = df.where(pd.notna(df), None)
