@@ -30,6 +30,9 @@ def run():
     df_classification.rename(
         columns={"uni_bigrams_word_counts": "search_keys"}, inplace=True
     )
+    # Some act_nums in the classification file have spaces (e.g. "PA1975HB 189"),
+    # but the clean data has them without spaces ("PA1975HB189"). Normalize here.
+    df_classification["act_num"] = df_classification["act_num"].str.replace(" ", "", regex=False)
     df_classification.set_index(["act_num"], inplace=True)
     print("--------------------------------")
 
@@ -42,13 +45,18 @@ def run():
             if isfile(join(clean_data_dir, f)) and f.endswith(".csv")
         ]
     )
+    all_missing_classifications = {}
+    all_multiple_classifications = {}
+
     for i, file in enumerate(onlyfiles):
         classification_missing = 0
+        classification_missing_all = []
         classification_missing_examples = []
         non_ag_acts = 0
         search_keys_bad_format = 0
         search_keys_bad_format_examples = []
         multiple_classification = 0
+        multiple_classification_all = []
         multiple_classification_examples = []
         nan_year_count = 0
         act_num_bad_format = 0
@@ -98,6 +106,7 @@ def run():
                     classification = year_classification.loc[row.act_num]
                 except KeyError:
                     classification_missing += 1
+                    classification_missing_all.append(row.act_num)
                     if len(classification_missing_examples) < 3:
                         classification_missing_examples.append(row.act_num)
                     continue
@@ -107,16 +116,39 @@ def run():
                     # Check if all rows are identical by comparing with the first row
                     first_row = classification.iloc[0]
                     if not (classification == first_row).all(axis=1).all():
-                        multiple_classification += 1
-                        if len(multiple_classification_examples) < 3:
-                            multiple_classification_examples.append(
-                                {
-                                    "act_num": row.act_num,
-                                    "num_rows": len(classification),
-                                    "columns": classification.columns.tolist(),
-                                }
-                            )
-                        continue
+                        # Check if differences are only in search_keys being empty vs non-empty
+                        # If so, treat as single classification (non-ag vs ag distinction)
+                        rows_are_equivalent = True
+                        for _, other_row in classification.iterrows():
+                            for col in classification.columns:
+                                first_val = first_row[col]
+                                other_val = other_row[col]
+                                if col == "search_keys":
+                                    # Allow empty vs non-empty search_keys to be equivalent
+                                    first_empty = first_val in ("{}", "", None)
+                                    other_empty = other_val in ("{}", "", None)
+                                    if first_empty != other_empty:
+                                        continue
+                                # For all columns (including search_keys when both empty or both non-empty),
+                                # require exact match
+                                if first_val != other_val:
+                                    rows_are_equivalent = False
+                                    break
+                            if not rows_are_equivalent:
+                                break
+
+                        if not rows_are_equivalent:
+                            multiple_classification += 1
+                            search_keys_values = classification["search_keys"].tolist()
+                            entry = {
+                                "act_num": row.act_num,
+                                "num_rows": len(classification),
+                                "uni_bigrams_word_counts": search_keys_values,
+                            }
+                            multiple_classification_all.append(entry)
+                            if len(multiple_classification_examples) < 3:
+                                multiple_classification_examples.append(entry)
+                            continue
                     classification = first_row
 
                 # Check for non-ag acts (empty search keys are intentional filtering)
@@ -196,7 +228,8 @@ def run():
                 print("\n  Examples of multiple classifications with different data:")
                 for ex in multiple_classification_examples:
                     print(f"    - act_num: {ex['act_num']}")
-                    print(f"      num_rows: {ex['num_rows']}, columns: {ex['columns']}")
+                    print(f"      num_rows: {ex['num_rows']}")
+                    print(f"      uni_bigrams_word_counts: {ex['uni_bigrams_word_counts']!r}")
             if search_keys_bad_format_examples:
                 print("\n  Examples of badly formatted search_keys:")
                 for ex in search_keys_bad_format_examples:
@@ -206,11 +239,56 @@ def run():
             print("No issues found")
 
         print("-" * 50 + "\n\n")
+
+        if classification_missing_all:
+            all_missing_classifications[file] = classification_missing_all
+        if multiple_classification_all:
+            all_multiple_classifications[file] = multiple_classification_all
+
         del df_grouped
         del df
         gc.collect()
 
     del df_classification
+
+    if all_missing_classifications:
+        output_path = join(script_dir, "../data/missing_classifications.txt")
+        total_missing = sum(len(v) for v in all_missing_classifications.values())
+        with open(output_path, "w") as f:
+            f.write(f"Missing Classifications Report\n")
+            f.write(f"Total missing: {total_missing}\n")
+            f.write("=" * 50 + "\n\n")
+            for file, act_nums in all_missing_classifications.items():
+                f.write(f"{file} ({len(act_nums)} missing)\n")
+                f.write("-" * 40 + "\n")
+                for act_num in act_nums:
+                    f.write(f"{act_num}\n")
+                f.write("\n")
+        print(f"Missing classifications written to: {output_path}")
+        print(f"Total missing across all files: {total_missing}")
+    else:
+        print("No missing classifications found.")
+
+    if all_multiple_classifications:
+        output_path = join(script_dir, "../data/multiple_classifications.txt")
+        total_multiple = sum(len(v) for v in all_multiple_classifications.values())
+        with open(output_path, "w") as f:
+            f.write("Multiple Classifications Report\n")
+            f.write(f"Total conflicts: {total_multiple}\n")
+            f.write("=" * 50 + "\n\n")
+            for file, entries in all_multiple_classifications.items():
+                f.write(f"{file} ({len(entries)} conflicts)\n")
+                f.write("-" * 40 + "\n")
+                for entry in entries:
+                    f.write(f"act_num: {entry['act_num']}\n")
+                    f.write(f"  rows: {entry['num_rows']}\n")
+                    for idx, sk in enumerate(entry["uni_bigrams_word_counts"], 1):
+                        f.write(f"  search_keys [{idx}]: {sk}\n")
+                    f.write("\n")
+        print(f"Multiple classifications written to: {output_path}")
+        print(f"Total conflicts across all files: {total_multiple}")
+    else:
+        print("No multiple classifications found.")
 
 
 def load_csv(file_path):
@@ -246,6 +324,14 @@ def load_csv(file_path):
     for old_col, new_col in column_mappings.items():
         if old_col in df.columns:
             df.rename(columns={old_col: new_col}, inplace=True)
+
+    # Ensure year is always a string (original column name may not match dtype dict)
+    if "year" in df.columns:
+        df["year"] = df["year"].astype(str)
+
+    # Strip spaces from act_num to match classification data
+    if "act_num" in df.columns:
+        df["act_num"] = df["act_num"].str.replace(" ", "", regex=False)
 
     # Replace all NaN values with None for proper JSON serialization
     df = df.where(pd.notna(df), None)
