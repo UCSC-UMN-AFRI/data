@@ -247,6 +247,32 @@ def run():
     script_dir = dirname(abspath(__file__))
     output_dir = join(script_dir, "missing_pdfs_output")
 
+    # Load classification results to filter for ag acts only (non-empty search_keys)
+    print("Loading classification results to filter for ag acts only...")
+    df_classification = pd.read_csv(
+        join(script_dir, "../data/classification_results.csv"),
+        dtype={"year": str},
+        usecols=["act_num", "state", "year", "uni_bigrams_word_counts"],
+    )
+    # Filter to only ag acts (those with non-empty search_keys)
+    df_ag = df_classification[
+        df_classification["uni_bigrams_word_counts"].notna()
+        & (df_classification["uni_bigrams_word_counts"] != "{}")
+        & (df_classification["uni_bigrams_word_counts"] != "")
+    ]
+    # Create a lookup by (state, year) -> set of ag act_nums
+    # Note: classification act_nums may have chapter numbers (e.g., DE2001CH123HB123)
+    # while clean data has standardized format (e.g., DE2001HB123)
+    ag_act_nums_by_state_year = {}
+    for _, row in df_ag.iterrows():
+        key = (row["state"], row["year"])
+        if key not in ag_act_nums_by_state_year:
+            ag_act_nums_by_state_year[key] = set()
+        ag_act_nums_by_state_year[key].add(row["act_num"])
+    total_ag = sum(len(s) for s in ag_act_nums_by_state_year.values())
+    print(f"Found {total_ag} agricultural acts (with search keys) across {len(ag_act_nums_by_state_year)} state/year groups")
+    print("-" * 50)
+
     # Get all CSV files in clean-data
     clean_data_dir = join(script_dir, "../data/clean-data")
     all_files = [
@@ -285,18 +311,38 @@ def run():
 
         total_rows = df.shape[0]
 
-        # Get unique act_nums to avoid duplicate checks
-        unique_act_nums = df['act_num'].dropna().astype(str)
-        unique_act_nums = unique_act_nums[unique_act_nums.str.strip() != ""]
-        unique_act_nums = unique_act_nums[unique_act_nums != "nan"]
-        unique_act_nums = unique_act_nums.unique().tolist()
+        # Get unique act_nums grouped by year to handle state/year specific filtering
+        df_clean = df[['act_num', 'year']].dropna()
+        df_clean = df_clean[df_clean['act_num'].astype(str).str.strip() != ""]
+        df_clean = df_clean[df_clean['act_num'] != "nan"]
 
+        # Filter to only ag acts by matching against classification data
+        ag_act_nums_filtered = []
+        for year in df_clean['year'].unique():
+            year_df = df_clean[df_clean['year'] == year]
+            key = (state_code, str(year))
+            ag_set = ag_act_nums_by_state_year.get(key, set())
+            if not ag_set:
+                continue
+            for act_num in year_df['act_num'].unique():
+                # Check if this act_num matches any ag classification act_num
+                # Classification act_nums may have chapter numbers (e.g., DE2001CH123HB123)
+                # Clean act_nums are standardized (e.g., DE2001HB123)
+                # Match if clean act_num is contained in any classification act_num
+                if any(act_num in ag_act for ag_act in ag_set):
+                    ag_act_nums_filtered.append(act_num)
+
+        unique_act_nums = list(set(ag_act_nums_filtered))  # Remove duplicates
+
+        original_count = len(df_clean['act_num'].unique())
+        non_ag_filtered = original_count - len(unique_act_nums)
         act_num_missing = total_rows - len(df['act_num'].dropna())
         total_checked = len(unique_act_nums)
 
         print(f"Total rows in CSV: {total_rows}")
         print(f"Act numbers missing/empty: {act_num_missing}")
-        print(f"Unique act_nums to check: {total_checked}")
+        print(f"Non-ag acts filtered out: {non_ag_filtered}")
+        print(f"Ag acts to check (unique act_nums): {total_checked}")
 
         if total_checked == 0:
             print("No valid act_nums found to check")
@@ -337,6 +383,9 @@ def run():
         del df
         del results
         gc.collect()
+
+    del ag_act_nums_by_state_year
+    gc.collect()
 
 def load_csv(file_path):
     """Load CSV file with proper column mapping and error handling."""
