@@ -43,6 +43,7 @@ def run():
             f
             for f in listdir(clean_data_dir)
             if isfile(join(clean_data_dir, f)) and f.endswith(".csv")
+            and (f != "FL_leginfo_clean.csv")
         ]
     )
     all_missing_classifications = {}
@@ -74,6 +75,9 @@ def run():
 
         # Process each group
         for (state, year), group_df in alive_it(df_grouped, total=len(df_grouped)):
+            # we skip these years for verification but if it's there it should be uploaded just not verified
+            if int(year) >= 2022:
+                continue
             # filter classification by year and state
             year_classification = df_classification[
                 (df_classification["year"] == year)
