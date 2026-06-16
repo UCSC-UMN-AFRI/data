@@ -32,7 +32,9 @@ def run():
     )
     # Some act_nums in the classification file have spaces (e.g. "PA1975HB 189"),
     # but the clean data has them without spaces ("PA1975HB189"). Normalize here.
-    df_classification["act_num"] = df_classification["act_num"].str.replace(" ", "", regex=False)
+    df_classification["act_num"] = df_classification["act_num"].str.replace(
+        " ", "", regex=False
+    )
     df_classification.set_index(["act_num"], inplace=True)
     print("--------------------------------")
 
@@ -233,7 +235,9 @@ def run():
                 for ex in multiple_classification_examples:
                     print(f"    - act_num: {ex['act_num']}")
                     print(f"      num_rows: {ex['num_rows']}")
-                    print(f"      uni_bigrams_word_counts: {ex['uni_bigrams_word_counts']!r}")
+                    print(
+                        f"      uni_bigrams_word_counts: {ex['uni_bigrams_word_counts']!r}"
+                    )
             if search_keys_bad_format_examples:
                 print("\n  Examples of badly formatted search_keys:")
                 for ex in search_keys_bad_format_examples:
@@ -259,7 +263,7 @@ def run():
         output_path = join(script_dir, "../data/missing_classifications.txt")
         total_missing = sum(len(v) for v in all_missing_classifications.values())
         with open(output_path, "w") as f:
-            f.write(f"Missing Classifications Report\n")
+            f.write("Missing Classifications Report\n")
             f.write(f"Total missing: {total_missing}\n")
             f.write("=" * 50 + "\n\n")
             for file, act_nums in all_missing_classifications.items():
