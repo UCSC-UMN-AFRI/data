@@ -6,6 +6,8 @@ from os.path import abspath, dirname, isfile, join
 import pandas as pd
 from alive_progress import alive_it
 
+from classification_utils import expand_classifications
+
 dtype = {
     "state": str,
     "year": str,
@@ -44,8 +46,9 @@ def run():
         [
             f
             for f in listdir(clean_data_dir)
-            if isfile(join(clean_data_dir, f)) and f.endswith(".csv")
-            and (f != "FL_leginfo_clean.csv")
+            if isfile(join(clean_data_dir, f))
+            and f.endswith(".csv")
+             and f.split("_")[0] in ["CA"]
         ]
     )
     all_missing_classifications = {}
@@ -117,62 +120,46 @@ def run():
                         classification_missing_examples.append(row.act_num)
                     continue
 
-                # Check for multiple classifications where the data is different
-                if isinstance(classification, pd.DataFrame):
-                    # Check if all rows are identical by comparing with the first row
-                    first_row = classification.iloc[0]
-                    if not (classification == first_row).all(axis=1).all():
-                        # Check if differences are only in search_keys being empty vs non-empty
-                        # If so, treat as single classification (non-ag vs ag distinction)
-                        rows_are_equivalent = True
-                        for _, other_row in classification.iterrows():
-                            for col in classification.columns:
-                                first_val = first_row[col]
-                                other_val = other_row[col]
-                                if col == "search_keys":
-                                    # Allow empty vs non-empty search_keys to be equivalent
-                                    first_empty = first_val in ("{}", "", None)
-                                    other_empty = other_val in ("{}", "", None)
-                                    if first_empty != other_empty:
-                                        continue
-                                # For all columns (including search_keys when both empty or both non-empty),
-                                # require exact match
-                                if first_val != other_val:
-                                    rows_are_equivalent = False
-                                    break
-                            if not rows_are_equivalent:
-                                break
+                classification_df = (
+                    classification if isinstance(classification, pd.DataFrame) else None
+                )
+                expanded = expand_classifications(classification)
 
-                        if not rows_are_equivalent:
-                            multiple_classification += 1
-                            search_keys_values = classification["search_keys"].tolist()
-                            entry = {
-                                "act_num": row.act_num,
-                                "num_rows": len(classification),
-                                "uni_bigrams_word_counts": search_keys_values,
-                            }
-                            multiple_classification_all.append(entry)
-                            if len(multiple_classification_examples) < 3:
-                                multiple_classification_examples.append(entry)
-                            continue
-                    classification = first_row
+                if classification_df is not None and not (
+                    classification_df == classification_df.iloc[0]
+                ).all(axis=1).all():
+                    if any(suffix is not None for suffix, _ in expanded):
+                        multiple_classification += 1
+                        search_keys_values = classification_df["search_keys"].tolist()
+                        entry = {
+                            "act_num": row.act_num,
+                            "num_rows": len(classification_df),
+                            "uni_bigrams_word_counts": search_keys_values,
+                        }
+                        multiple_classification_all.append(entry)
+                        if len(multiple_classification_examples) < 3:
+                            multiple_classification_examples.append(entry)
 
-                # Check for non-ag acts (empty search keys are intentional filtering)
-                if isinstance(classification, pd.Series):
-                    search_keys = classification.get("search_keys")
-                else:
-                    search_keys = classification["search_keys"]
-                if search_keys == "{}" or search_keys == "" or search_keys is None:
+                if not expanded:
                     non_ag_acts += 1
-                else:
-                    try:
-                        json.loads(search_keys.replace("'", '"'))
-                    except (json.JSONDecodeError, TypeError):
-                        search_keys_bad_format += 1
-                        if len(search_keys_bad_format_examples) < 3:
-                            search_keys_bad_format_examples.append(
-                                {"act_num": row.act_num, "search_keys": search_keys}
-                            )
+                    continue
+
+                for _suffix, classification_row in expanded:
+                    search_keys = classification_row.get("search_keys")
+                    if search_keys == "{}" or search_keys == "" or search_keys is None:
+                        non_ag_acts += 1
+                    else:
+                        try:
+                            json.loads(str(search_keys).replace("'", '"'))
+                        except (json.JSONDecodeError, TypeError):
+                            search_keys_bad_format += 1
+                            if len(search_keys_bad_format_examples) < 3:
+                                search_keys_bad_format_examples.append(
+                                    {
+                                        "act_num": row.act_num,
+                                        "search_keys": search_keys,
+                                    }
+                                )
 
                 del classification
 
@@ -216,7 +203,7 @@ def run():
 
         class_stats = {
             "Act number classifications missing": classification_missing,
-            "Act number multiple classifications with different data": multiple_classification,
+            "Act number expanded to suffixed variants (_1, _2, ...)": multiple_classification,
             "Search keys badly formatted (not a json)": search_keys_bad_format,
         }
 
@@ -231,7 +218,7 @@ def run():
                 for act_num in classification_missing_examples:
                     print(f"    - {act_num}")
             if multiple_classification_examples:
-                print("\n  Examples of multiple classifications with different data:")
+                print("\n  Examples of acts expanded to suffixed variants:")
                 for ex in multiple_classification_examples:
                     print(f"    - act_num: {ex['act_num']}")
                     print(f"      num_rows: {ex['num_rows']}")
@@ -281,11 +268,11 @@ def run():
         output_path = join(script_dir, "../data/multiple_classifications.txt")
         total_multiple = sum(len(v) for v in all_multiple_classifications.values())
         with open(output_path, "w") as f:
-            f.write("Multiple Classifications Report\n")
-            f.write(f"Total conflicts: {total_multiple}\n")
+            f.write("Multiple Classifications Report (expanded to suffixed variants)\n")
+            f.write(f"Total expanded: {total_multiple}\n")
             f.write("=" * 50 + "\n\n")
             for file, entries in all_multiple_classifications.items():
-                f.write(f"{file} ({len(entries)} conflicts)\n")
+                f.write(f"{file} ({len(entries)} expanded)\n")
                 f.write("-" * 40 + "\n")
                 for entry in entries:
                     f.write(f"act_num: {entry['act_num']}\n")

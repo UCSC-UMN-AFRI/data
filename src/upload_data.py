@@ -9,6 +9,8 @@ import pandas as pd
 from os import listdir, environ
 from os.path import isfile, join, dirname, abspath
 
+from classification_utils import expand_classifications
+
 # Parallel upload tuning: raise toward 256 if 429 retries stay rare; lower if throttled.
 CONCURRENCY = 64
 SEARCH_BATCH_SIZE = 100
@@ -22,49 +24,6 @@ dtype = {
 
 NAME_FALLBACK_MAX_LEN = 500
 TEXT_FALLBACK_COLS = ("Full text", "original_text")
-
-
-def resolve_classification(
-    classification: pd.DataFrame | pd.Series,
-) -> pd.Series | None:
-    """Match verify_data.py: collapse duplicate rows; skip truly conflicting rows."""
-    if isinstance(classification, pd.Series):
-        return classification
-
-    first_row = classification.iloc[0]
-    if (classification == first_row).all(axis=1).all():
-        return first_row
-
-    rows_are_equivalent = True
-    for _, other_row in classification.iterrows():
-        for col in classification.columns:
-            first_val = first_row[col]
-            other_val = other_row[col]
-            if col == "search_keys":
-                first_empty = first_val in ("{}", "", None)
-                other_empty = other_val in ("{}", "", None)
-                if first_empty != other_empty:
-                    continue
-            if first_val != other_val:
-                rows_are_equivalent = False
-                break
-        if not rows_are_equivalent:
-            break
-
-    if not rows_are_equivalent:
-        return None
-
-    # Equivalent rows: prefer a row with non-empty search_keys for upload
-    for _, r in classification.iterrows():
-        sk = r.get("search_keys")
-        if sk not in ("{}", "", None) and sk:
-            try:
-                parsed = json.loads(str(sk).replace("'", '"'))
-                if parsed:
-                    return r
-            except (json.JSONDecodeError, TypeError):
-                continue
-    return first_row
 
 
 def search_keys_to_dict(search_keys) -> dict | None:
@@ -245,33 +204,34 @@ def run():
             if classification is None:
                 continue
 
-            classification = resolve_classification(classification)
-            if classification is None:
-                continue
+            for suffix, classification_row in expand_classifications(classification):
+                upload_act_num = f"{act_num}{suffix}" if suffix else act_num
+                search_keys_dict = search_keys_to_dict(classification_row["search_keys"])
+                if not search_keys_dict:
+                    continue
 
-            search_keys_dict = search_keys_to_dict(classification["search_keys"])
-            if not search_keys_dict:
-                continue
+                for search_key, relevance in search_keys_dict.items():
+                    search_data = {
+                        "id": str(uuid.uuid4()),
+                        "act_num": upload_act_num,
+                        "relevance": relevance,
+                        "state": str(row["state"]),
+                        "year": int(row["year"]),
+                        "search_key": search_key,
+                    }
+                    batch_key = f"{row['state']}/{row['year']}/{search_key}"
+                    search_batches.setdefault(batch_key, []).append(
+                        ("create", (search_data,), {})
+                    )
 
-            for search_key, relevance in search_keys_dict.items():
-                search_data = {
-                    "id": str(uuid.uuid4()),
-                    "act_num": act_num,
-                    "relevance": relevance,
-                    "state": str(row["state"]),
-                    "year": int(row["year"]),
-                    "search_key": search_key,
-                }
-                batch_key = f"{row['state']}/{row['year']}/{search_key}"
-                search_batches.setdefault(batch_key, []).append(
-                    ("create", (search_data,), {})
-                )
-
-            data = dict(row)
-            data["act_num"] = act_num
-            data["year"] = int(data["year"])
-            act_doc = {key: data.get(key) for key in keys_to_upload}
-            act_batches.setdefault(act_num, act_doc)
+                data = dict(row)
+                data["act_num"] = upload_act_num
+                data["year"] = int(data["year"])
+                act_doc = {key: data.get(key) for key in keys_to_upload}
+                act_doc["act_num"] = upload_act_num
+                if suffix:
+                    act_doc["base_act_num"] = act_num
+                act_batches.setdefault(upload_act_num, act_doc)
 
         start_time = time.time()
         n_search_ops = sum(

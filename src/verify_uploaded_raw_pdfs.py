@@ -17,8 +17,12 @@ from dotenv import load_dotenv
 STATES_TO_VERIFY = [
     # "RI",
     # "CA",
-    # "IL",
+    "IL",
+    "RI",
     "ME",
+    # "ME",
+    # "RI",
+    # "FL",
     # "KY",
     # "MT",
 ]
@@ -38,10 +42,12 @@ session.headers.update(
 results_lock = Lock()
 
 
-async def fetch_uploaded_act_nums(url: str, key: str, db_name: str, states: list[str]):
+async def fetch_uploaded_act_records(
+    url: str, key: str, db_name: str, states: list[str]
+):
     """
-    Load act_num values from the Cosmos `acts` container (source of truth for uploads).
-    Partition key for acts is /act_num; filter by state requires a cross-partition query.
+    Load act records from the Cosmos `acts` container (source of truth for uploads).
+    Returns per state a list of {act_num, pdf_act_num} for PDF verification.
     """
     async with CosmosClient(
         url,
@@ -51,18 +57,25 @@ async def fetch_uploaded_act_nums(url: str, key: str, db_name: str, states: list
     ) as client:
         database = client.get_database_client(db_name)
         acts = database.get_container_client("acts")
-        results: dict[str, list[str]] = {}
+        results: dict[str, list[dict[str, str]]] = {}
         for state in states:
-            act_nums: list[str] = []
-            query = "SELECT c.act_num FROM c WHERE c.state = @state"
+            records: list[dict[str, str]] = []
+            query = "SELECT c.act_num, c.base_act_num FROM c WHERE c.state = @state"
             params = [{"name": "@state", "value": state}]
             async for item in acts.query_items(
                 query=query,
                 parameters=params,
             ):
-                act_nums.append(str(item["act_num"]))
-            results[state] = sorted(set(act_nums))
-            print(f"  {state}: {len(results[state])} uploaded act_nums")
+                act_num = str(item["act_num"])
+                base_act_num = item.get("base_act_num")
+                pdf_act_num = str(base_act_num) if base_act_num else act_num
+                records.append({"act_num": act_num, "pdf_act_num": pdf_act_num})
+            results[state] = records
+            unique_pdfs = len({r["pdf_act_num"] for r in records})
+            print(
+                f"  {state}: {len(records)} uploaded act_nums, "
+                f"{unique_pdfs} unique PDFs to check"
+            )
         return results
 
 
@@ -115,6 +128,96 @@ def check_pdf_url_exists(act_num, timeout=5, max_retries=2):
             return act_num, False, None, f"Request error: {str(e)}"
 
     return act_num, False, None, "Max retries exceeded"
+
+
+def process_pdf_act_nums_batch(
+    pdf_act_nums: list[str],
+    pdf_to_uploaded: dict[str, list[str]],
+    max_workers=20,
+):
+    """
+    Process a batch of pdf_act_num values concurrently.
+
+    Args:
+        pdf_act_nums: Unique PDF blob names to check
+        pdf_to_uploaded: Mapping pdf_act_num -> list of uploaded act_nums
+        max_workers: Maximum number of concurrent threads
+
+    Returns:
+        dict: Results dictionary with counts and details
+    """
+    results = {
+        "pdf_exists_count": 0,
+        "pdf_missing_count": 0,
+        "pdf_error_count": 0,
+        "missing_act_nums": [],
+        "error_act_nums": [],
+        "details": [],
+    }
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_pdf = {
+            executor.submit(check_pdf_url_exists, pdf_act_num): pdf_act_num
+            for pdf_act_num in pdf_act_nums
+        }
+
+        for future in alive_it(
+            as_completed(future_to_pdf),
+            total=len(pdf_act_nums),
+            title="Checking URLs",
+        ):
+            try:
+                pdf_act_num, exists, status_code, error = future.result()
+                uploaded_act_nums = pdf_to_uploaded.get(pdf_act_num, [pdf_act_num])
+
+                with results_lock:
+                    if exists:
+                        results["pdf_exists_count"] += 1
+                    elif error and "Not found" not in error:
+                        results["pdf_error_count"] += 1
+                        results["error_act_nums"].append(
+                            {
+                                "pdf_act_num": pdf_act_num,
+                                "uploaded_act_nums": uploaded_act_nums,
+                                "status_code": status_code,
+                                "error": error,
+                            }
+                        )
+                    else:
+                        results["pdf_missing_count"] += 1
+                        results["missing_act_nums"].append(
+                            {
+                                "pdf_act_num": pdf_act_num,
+                                "uploaded_act_nums": uploaded_act_nums,
+                                "status_code": status_code,
+                                "error": error or "Not found",
+                            }
+                        )
+
+                    results["details"].append(
+                        {
+                            "pdf_act_num": pdf_act_num,
+                            "uploaded_act_nums": uploaded_act_nums,
+                            "exists": exists,
+                            "status_code": status_code,
+                            "error": error,
+                        }
+                    )
+
+            except Exception as e:
+                print(f"Error processing future: {e}")
+                with results_lock:
+                    results["pdf_error_count"] += 1
+                    results["error_act_nums"].append(
+                        {
+                            "pdf_act_num": "unknown",
+                            "uploaded_act_nums": [],
+                            "status_code": None,
+                            "error": f"Processing error: {str(e)}",
+                        }
+                    )
+
+    return results
 
 
 def process_act_nums_batch(act_nums, max_workers=20):
@@ -231,7 +334,10 @@ def write_missing_act_nums(
             f.write("=" * 50 + "\n\n")
 
             for item in missing_act_nums:
-                f.write(f"{item['act_num']}\n")
+                f.write(f"{item['pdf_act_num']}\n")
+                uploaded = item.get("uploaded_act_nums") or []
+                if len(uploaded) > 1:
+                    f.write(f"  # uploaded act_nums: {', '.join(uploaded)}\n")
 
         print(f"  → Missing act_nums written to: {missing_file}")
 
@@ -269,28 +375,37 @@ def run():
     print(f"Missing PDFs output directory: {output_dir}")
     print("-" * 50)
 
-    act_nums_by_state = asyncio.run(
-        fetch_uploaded_act_nums(url, key, db_name, STATES_TO_VERIFY)
+    act_records_by_state = asyncio.run(
+        fetch_uploaded_act_records(url, key, db_name, STATES_TO_VERIFY)
     )
 
     print("Checking PDF URL availability with concurrent processing...")
     print("=" * 60)
 
     for i, state_code in enumerate(STATES_TO_VERIFY):
-        unique_act_nums = act_nums_by_state.get(state_code, [])
+        records = act_records_by_state.get(state_code, [])
         print(f"\nProcessing [{state_code}] ({i + 1}/{len(STATES_TO_VERIFY)})")
-        print(f"Uploaded act_nums from Cosmos: {len(unique_act_nums)}")
+        print(f"Uploaded act_nums from Cosmos: {len(records)}")
 
-        if not unique_act_nums:
+        if not records:
             print("No act_nums in Cosmos for this state, skipping PDF checks")
             print("-" * 50)
             continue
 
+        pdf_to_uploaded: dict[str, list[str]] = {}
+        for record in records:
+            pdf_to_uploaded.setdefault(record["pdf_act_num"], []).append(record["act_num"])
+        unique_pdf_act_nums = sorted(pdf_to_uploaded.keys())
+        print(f"Unique PDFs to check: {len(unique_pdf_act_nums)}")
+
         start_time = time.time()
-        results = process_act_nums_batch(unique_act_nums, max_workers=30)
+        results = process_pdf_act_nums_batch(
+            unique_pdf_act_nums, pdf_to_uploaded, max_workers=30
+        )
         end_time = time.time()
 
-        total_checked = len(unique_act_nums)
+        total_uploaded = len(records)
+        total_checked = len(unique_pdf_act_nums)
 
         if results["missing_act_nums"] or results["error_act_nums"]:
             write_missing_act_nums(
@@ -313,6 +428,8 @@ def run():
         error_pct = (results["pdf_error_count"] / total_checked) * 100
 
         print("\nPDF Availability:")
+        print(f"  Uploaded act_nums: {total_uploaded}")
+        print(f"  Unique PDFs checked: {total_checked}")
         print(
             f"  PDFs found:     {results['pdf_exists_count']:5}/{total_checked} ({exists_pct:.1f}%)"
         )
