@@ -187,6 +187,9 @@ def run():
 
         search_batches = {}
         act_batches = {}
+        # Clean-data CSVs can contain the same act_num on multiple rows; process each
+        # base act_num once to avoid duplicate search_index entries.
+        seen_act_nums: set[str] = set()
         df_columns = list(df.columns)
         for tup in df.itertuples(index=False, name=None):
             row = dict(zip(df_columns, tup))
@@ -199,6 +202,10 @@ def run():
             act_num = str(act_num).strip()
             if not act_num:
                 continue
+
+            if act_num in seen_act_nums:
+                continue
+            seen_act_nums.add(act_num)
 
             classification = classification_by_act.get(act_num)
             if classification is None:
