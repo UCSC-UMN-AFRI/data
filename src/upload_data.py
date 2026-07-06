@@ -9,11 +9,15 @@ import pandas as pd
 from os import listdir, environ
 from os.path import isfile, join, dirname, abspath
 
-from classification_utils import expand_classifications
+from classification_utils import expand_classifications, merged_search_keys
 
 # Parallel upload tuning: raise toward 256 if 429 retries stay rare; lower if throttled.
 CONCURRENCY = 64
 SEARCH_BATCH_SIZE = 100
+
+# TEMP: only upload acts with conflicting classifications (merged on upload).
+# Set to False before a full state re-upload.
+ONLY_MULTI_CLASSIFICATION_ACTS = True
 
 dtype = {
     "state": str,
@@ -93,7 +97,7 @@ def run():
         # "AK",
         # "AZ",
         # "AR",
-        # "CA",
+        "CA",
         # "CO",
         # "CT",
         # "DE",
@@ -106,41 +110,40 @@ def run():
         # "IN",
         # "IA",
         # "KS",
-        "KY",
-        "LA",
-        "ME",
-        "MD",
-        "MA",
-        "MI",
-        "MN",
-        "MS",
-        "MO",
-        "MT",
-        "NE",
-        "NV",
-        "NH",
-        "NJ",
-        "NM",
-        "NY",
-        "NC",
-        "ND",
-        "OH",
-        "OK",
+        # "KY",
+        # "LA",
+        # "ME",
+        # "MD",
+        # "MA",
+        # "MI",
+        # "MN",
+        # "MS",
+        # "MO",
+        # "MT",
+        # "NE",
+        # "NV",
+        # "NH",
+        # "NJ",
+        # "NM",
+        # "NY",
+        # "NC",
+        # "ND",
+        # "OH",
+        # "OK",
         # "OR",
-        "PA",
-        "RI",
-        "SC",
-        "SD",
-        "TN",
-        "TX",
-        "UT",
-        "VT",
-        "VA",
-        "WA",
-        "WV",
-        "WI",
-        "WY",
-        # "AR", "AZ", "CA", "CO", "CT",
+        # "PA",
+        # "RI",
+        # "SC",
+        # "SD",
+        # "TN",
+        # "TX",
+        # "UT",
+        # "VT",
+        # "VA",
+        # "WA",
+        # "WV",
+        # "WI",
+        # "WY",
     ]
     keys_to_upload = ["id", "act_num", "year", "state", "name"]
 
@@ -211,34 +214,34 @@ def run():
             if classification is None:
                 continue
 
-            for suffix, classification_row in expand_classifications(classification):
-                upload_act_num = f"{act_num}{suffix}" if suffix else act_num
-                search_keys_dict = search_keys_to_dict(classification_row["search_keys"])
-                if not search_keys_dict:
-                    continue
+            expanded = expand_classifications(classification)
+            is_multi = len(expanded) > 1
+            if ONLY_MULTI_CLASSIFICATION_ACTS and not is_multi:
+                continue
 
-                for search_key, relevance in search_keys_dict.items():
-                    search_data = {
-                        "id": str(uuid.uuid4()),
-                        "act_num": upload_act_num,
-                        "relevance": relevance,
-                        "state": str(row["state"]),
-                        "year": int(row["year"]),
-                        "search_key": search_key,
-                    }
-                    batch_key = f"{row['state']}/{row['year']}/{search_key}"
-                    search_batches.setdefault(batch_key, []).append(
-                        ("create", (search_data,), {})
-                    )
+            search_keys_dict = merged_search_keys(classification)
+            if not search_keys_dict:
+                continue
 
-                data = dict(row)
-                data["act_num"] = upload_act_num
-                data["year"] = int(data["year"])
-                act_doc = {key: data.get(key) for key in keys_to_upload}
-                act_doc["act_num"] = upload_act_num
-                if suffix:
-                    act_doc["base_act_num"] = act_num
-                act_batches.setdefault(upload_act_num, act_doc)
+            for search_key, relevance in search_keys_dict.items():
+                search_data = {
+                    "id": str(uuid.uuid4()),
+                    "act_num": act_num,
+                    "relevance": relevance,
+                    "state": str(row["state"]),
+                    "year": int(row["year"]),
+                    "search_key": search_key,
+                }
+                batch_key = f"{row['state']}/{row['year']}/{search_key}"
+                search_batches.setdefault(batch_key, []).append(
+                    ("create", (search_data,), {})
+                )
+
+            data = dict(row)
+            data["act_num"] = act_num
+            data["year"] = int(data["year"])
+            act_doc = {key: data.get(key) for key in keys_to_upload}
+            act_batches.setdefault(act_num, act_doc)
 
         start_time = time.time()
         n_search_ops = sum(
@@ -250,6 +253,11 @@ def run():
             f"Uploading search index ({len(search_batches)} partitions, "
             f"{n_search_ops} batch ops) and acts ({n_act_ops} creates) "
             f"from {total_rows} rows to Cosmos DB (concurrency={CONCURRENCY})"
+            + (
+                " [ONLY_MULTI_CLASSIFICATION_ACTS]"
+                if ONLY_MULTI_CLASSIFICATION_ACTS
+                else ""
+            )
         )
         asyncio.run(upload_all(URL, KEY, COSMOS_DB_NAME, search_batches, act_batches))
 

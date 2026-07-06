@@ -59,3 +59,20 @@ def expand_classifications(
         return []
 
     return [(f"_{i}", row) for i, row in enumerate(non_empty_rows, start=1)]
+
+
+def merged_search_keys(classification: pd.DataFrame | pd.Series) -> dict:
+    """Union of all variant search_keys for an act; max relevance on overlap."""
+    merged: dict = {}
+    for _suffix, row in expand_classifications(classification):
+        sk = row.get("search_keys")
+        if sk in ("{}", "", None):
+            continue
+        try:
+            parsed = json.loads(str(sk).replace("'", '"'))
+        except (json.JSONDecodeError, TypeError):
+            continue
+        for key, rel in parsed.items():
+            if key not in merged or rel > merged[key]:
+                merged[key] = rel
+    return merged

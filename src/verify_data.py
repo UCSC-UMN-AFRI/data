@@ -203,7 +203,7 @@ def run():
 
         class_stats = {
             "Act number classifications missing": classification_missing,
-            "Act number expanded to suffixed variants (_1, _2, ...)": multiple_classification,
+            "Act number merged (multiple classifications combined)": multiple_classification,
             "Search keys badly formatted (not a json)": search_keys_bad_format,
         }
 
@@ -218,7 +218,7 @@ def run():
                 for act_num in classification_missing_examples:
                     print(f"    - {act_num}")
             if multiple_classification_examples:
-                print("\n  Examples of acts expanded to suffixed variants:")
+                print("\n  Examples of acts merged (multiple classifications):")
                 for ex in multiple_classification_examples:
                     print(f"    - act_num: {ex['act_num']}")
                     print(f"      num_rows: {ex['num_rows']}")
@@ -268,11 +268,11 @@ def run():
         output_path = join(script_dir, "../data/multiple_classifications.txt")
         total_multiple = sum(len(v) for v in all_multiple_classifications.values())
         with open(output_path, "w") as f:
-            f.write("Multiple Classifications Report (expanded to suffixed variants)\n")
-            f.write(f"Total expanded: {total_multiple}\n")
+            f.write("Multiple Classifications Report (merged on upload)\n")
+            f.write(f"Total merged: {total_multiple}\n")
             f.write("=" * 50 + "\n\n")
             for file, entries in all_multiple_classifications.items():
-                f.write(f"{file} ({len(entries)} expanded)\n")
+                f.write(f"{file} ({len(entries)} merged)\n")
                 f.write("-" * 40 + "\n")
                 for entry in entries:
                     f.write(f"act_num: {entry['act_num']}\n")
